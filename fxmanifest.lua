@@ -11,3 +11,7 @@ server_script {
     'server.lua',
     'config.lua'
 }
+
+files {
+    'index.html'
+}
