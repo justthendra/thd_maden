@@ -11,10 +11,3 @@ server_script {
     'server.lua',
     'config.lua'
 }
-
-ui_page('index.html')
-
-files {
-    "index.html",
-    "hehe.js"
-}
