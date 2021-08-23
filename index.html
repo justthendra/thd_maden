@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>thd_maden</title>
+        <meta charset="utf-8">
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet">
+        
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="nui://game/ui/jquery.js" type="text/javascript"></script>
+        
+        <style>
+
+            * {
+                padding: 0;
+                margin: 0;
+            }
+
+            body {
+                display: flex;
+                height: 100vh;
+                width: 100%;
+                justify-content: center;
+                z-index: 3;
+            }
+
+            .ilerleme {
+                position: fixed;
+                bottom: 10%;
+                width: 14%;
+                border: 0 none;
+                background: #ddd;
+                border-radius: 14px;
+                height: 1.2%;
+            }
+
+            .ilerleme::-moz-progress-bar {
+                background: #FFF;
+                border-radius: 14px;
+            }
+
+            .ilerleme::-webkit-progress-bar {
+                background: transparent;
+            }
+
+            .ilerleme::-webkit-progress-value {
+                background: rgb(246,10,10);
+                background: linear-gradient(59deg, rgba(246,10,10,1) 0%, rgba(186,9,9,1) 100%);
+                border-radius: 14px;
+                box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.2), 0 2px 5px 0px rgba(0, 0, 0, 0.1);
+            }
+
+        </style>
+    </head>
+    <body>
+        <progress class="ilerleme" id="bar1" value="0" max="10" style="display: none;"></progress>
+        <progress class="ilerleme" id="bar2" value="0" max="10" style="display: none;"></progress>
+        <progress class="ilerleme" id="bar3" value="0" max="10" style="display: none;"></progress>
+        <progress class="ilerleme" id="bar4" value="0" max="10" style="display: none;"></progress>
+        <progress class="ilerleme" id="bar5" value="0" max="10" style="display: none;"></progress>
+        <progress class="ilerleme" id="bar6" value="0" max="10" style="display: none;"></progress>
+
+        <script>
+            $(document).ready(function(){
+
+                window.addEventListener('message', function(event) {
+                    var item = event.data;
+                    $("#" + item.type).css("display", item.status)
+                    if(item.type === "ekle" && item.bar != null) {
+                        $.post('http://thd_maden/kaya', JSON.stringify({
+                            kaya: barekle(item.bar, 1.5),
+                        }));
+                    }
+                })
+
+                function barekle(barId, value) {
+                    var bar = $("#" + barId)
+                    barVal = bar.val()
+                    barNextVal = barVal + value
+                    if(barNextVal >= 10){
+                        bar.val(0)
+                        return true
+                    }
+                    else {
+                        bar.val(barNextVal)
+                        return false
+                    }
+                }
+
+            });
+        </script>
+    </body>
+</html>
