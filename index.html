@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>thd_maden</title>
+        <title>cwl_maden</title>
         <meta charset="utf-8">
         <link rel="preconnect" href="https://fonts.gstatic.com">
         <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet">
@@ -67,7 +67,7 @@
                     var item = event.data;
                     $("#" + item.type).css("display", item.status)
                     if(item.type === "ekle" && item.bar != null) {
-                        $.post('http://thd_maden/kaya', JSON.stringify({
+                        $.post('http://cwl_maden/kaya', JSON.stringify({
                             kaya: barekle(item.bar, 1.5),
                         }));
                     }
