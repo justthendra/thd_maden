@@ -96,12 +96,12 @@ Citizen.CreateThread(function()
 		if (isInMarker and not HasAlreadyEnteredMarker) or (isInMarker and LastZone ~= currentZone) then
 			HasAlreadyEnteredMarker = true
 			LastZone                = currentZone
-			TriggerEvent('cwl_maden:hasEnteredMarker', currentZone)
+			TriggerEvent('thd_maden:hasEnteredMarker', currentZone)
 		end
 
 		if not isInMarker and HasAlreadyEnteredMarker then
 			HasAlreadyEnteredMarker = false
-			TriggerEvent('cwl_maden:hasExitedMarker', LastZone)
+			TriggerEvent('thd_maden:hasExitedMarker', LastZone)
 		end
         
 	end
@@ -133,8 +133,8 @@ function OpenMenu()
 	end)
 end
 
-RegisterNetEvent('cwl_maden:eleKazma')
-AddEventHandler('cwl_maden:eleKazma', function()
+RegisterNetEvent('thd_maden:eleKazma')
+AddEventHandler('thd_maden:eleKazma', function()
     eleKazma()
 end)
 
@@ -143,29 +143,29 @@ function eleKazma()
         kazma = CreateObject(GetHashKey("prop_tool_pickaxe"), 0, 0, 0, true, true, true) 
         AttachEntityToEntity(kazma, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 57005), 0.09, 0.03, -0.02, -78.0, 13.0, 28.0, false, false, false, false, 1, true)
         SetCurrentPedWeapon(PlayerPedId(), GetHashKey('WEAPON_UNARMED'))
-        TriggerEvent('cwl_maden:vuramaz')
-        TriggerEvent('cwl_maden:vuramaz2')
+        TriggerEvent('thd_maden:vuramaz')
+        TriggerEvent('thd_maden:vuramaz2')
         kazma = true
     else
         DetachEntity(kazma, 1, true)
         DeleteObject(kazma)
         SetCurrentPedWeapon(PlayerPedId(), GetHashKey('WEAPON_UNARMED'))
-        TriggerEvent('cwl_maden:vuramaz')
-        TriggerEvent('cwl_maden:vuramaz2')
+        TriggerEvent('thd_maden:vuramaz')
+        TriggerEvent('thd_maden:vuramaz2')
 		kazma = false
     end
 end
 
 function AracOlustur()
     if vehicle == nil then
-        TriggerServerEvent('cwl_maden:arac')
+        TriggerServerEvent('thd_maden:arac')
     else
         exports['mythic_notify']:SendAlert('error', 'Zaten bir aracın var.', 5000)
     end
 end
 
-RegisterNetEvent('cwl_maden:AracOlustur')
-AddEventHandler('cwl_maden:AracOlustur', function ()
+RegisterNetEvent('thd_maden:AracOlustur')
+AddEventHandler('thd_maden:AracOlustur', function ()
     if vehicle == nil then
         local modelHash = GetHashKey("Rebel")
         RequestModel(modelHash)
@@ -196,8 +196,8 @@ function AracSil()
     end
 end
 
-RegisterNetEvent('cwl_maden:vuramaz')
-AddEventHandler('cwl_maden:vuramaz', function()
+RegisterNetEvent('thd_maden:vuramaz')
+AddEventHandler('thd_maden:vuramaz', function()
     Citizen.CreateThread(function()
         while kazma do
             Citizen.Wait(0)
@@ -231,8 +231,8 @@ AddEventHandler('cwl_maden:vuramaz', function()
     end)
 end)
 
-RegisterNetEvent('cwl_maden:vuramaz2')
-AddEventHandler('cwl_maden:vuramaz2', function()
+RegisterNetEvent('thd_maden:vuramaz2')
+AddEventHandler('thd_maden:vuramaz2', function()
     Citizen.CreateThread(function()
         while kazma do
             Citizen.Wait(0)
@@ -254,7 +254,7 @@ function TokenVerMenu()
 		if tokenMik < 0 or tokenMik == nil then
 			exports['mythic_notify']:SendAlert('error', 'Aynen şuan buga soktun.', 5000)
 		else
-            TriggerServerEvent('cwl_maden:givePara', tokenMik, tokenMik * Config.BirTokenFiyat)
+            TriggerServerEvent('thd_maden:givePara', tokenMik, tokenMik * Config.BirTokenFiyat)
 			menu.close()
 		end
 	end, function (data2, menu)
@@ -274,7 +274,7 @@ function mesajGoster(msg, action)
                     if var == true then
                         if alabilir == true then
                             alabilir = false
-                            TriggerServerEvent('cwl_maden:giveToken', anliktoken)
+                            TriggerServerEvent('thd_maden:giveToken', anliktoken)
                             anliktoken = 0
                             var = false
                         else
@@ -297,7 +297,7 @@ function mesajGoster(msg, action)
                         FreezeEntityPosition(PlayerPedId(), false)
                         DisablePlayerFiring(PlayerPedId(), true)
                     end)
-                    TriggerServerEvent('cwl_maden:kayalariver')
+                    TriggerServerEvent('thd_maden:kayalariver')
                 elseif action == "tokensat" then
                     OpenMenu()
                 end
@@ -306,13 +306,13 @@ function mesajGoster(msg, action)
     end)
 end
 
-RegisterNetEvent('cwl_maden:verchance')
-AddEventHandler('cwl_maden:verchance', function(bool)
+RegisterNetEvent('thd_maden:verchance')
+AddEventHandler('thd_maden:verchance', function(bool)
     var = bool
 end)
 
-RegisterNetEvent('cwl_maden:tokensayac')
-AddEventHandler('cwl_maden:tokensayac', function(itemsayi)
+RegisterNetEvent('thd_maden:tokensayac')
+AddEventHandler('thd_maden:tokensayac', function(itemsayi)
     sayac = Config.KayaEritmeSuresi
     while sayac > 0 do
         sayac = sayac - 1
@@ -323,7 +323,7 @@ AddEventHandler('cwl_maden:tokensayac', function(itemsayi)
     alabilir = true
 end)
 
-AddEventHandler('cwl_maden:hasEnteredMarker', function(zone)
+AddEventHandler('thd_maden:hasEnteredMarker', function(zone)
     currentBar = zone
     if (zone ~= "tokenal" and zone ~= "kayaver" and zone ~= "tokensat") then
         SetDisplay(zone, "block")
@@ -338,14 +338,14 @@ AddEventHandler('cwl_maden:hasEnteredMarker', function(zone)
     end
 end)
 
-AddEventHandler('cwl_maden:hasExitedMarker', function(zone)
+AddEventHandler('thd_maden:hasExitedMarker', function(zone)
     closeAll()
     currentBar = nil
 end)
 
 RegisterNUICallback("kaya", function(data)
     if data.kaya then
-        TriggerServerEvent('cwl_maden:givekaya')
+        TriggerServerEvent('thd_maden:givekaya')
     end
 end)
 
