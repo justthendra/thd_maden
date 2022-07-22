@@ -3,12 +3,12 @@ ESX = nil
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
 ESX.RegisterUsableItem('kazma', function(source)
-	TriggerClientEvent('cwl_maden:eleKazma', source)
+	TriggerClientEvent('thd_maden:eleKazma', source)
 end)
 
 
-RegisterServerEvent('cwl_maden:givekaya')
-AddEventHandler('cwl_maden:givekaya', function()
+RegisterServerEvent('thd_maden:givekaya')
+AddEventHandler('thd_maden:givekaya', function()
 	local xPlayer = ESX.GetPlayerFromId(source)
 
 	local xItem = xPlayer.getInventoryItem("tas")
@@ -16,15 +16,15 @@ AddEventHandler('cwl_maden:givekaya', function()
 	xPlayer.addInventoryItem("tas", 1)
 end)
 
-RegisterServerEvent('cwl_maden:giveToken')
-AddEventHandler('cwl_maden:giveToken', function(count)
+RegisterServerEvent('thd_maden:giveToken')
+AddEventHandler('thd_maden:giveToken', function(count)
 	local xPlayer = ESX.GetPlayerFromId(source)
 
 	xPlayer.addInventoryItem("token", count)
 end)
 
-RegisterServerEvent('cwl_maden:givePara')
-AddEventHandler('cwl_maden:givePara', function(tokenmik, mik)
+RegisterServerEvent('thd_maden:givePara')
+AddEventHandler('thd_maden:givePara', function(tokenmik, mik)
 	local _source = source
 	local xPlayer = ESX.GetPlayerFromId(_source)
 
@@ -33,37 +33,37 @@ AddEventHandler('cwl_maden:givePara', function(tokenmik, mik)
 
 end)
 
-RegisterServerEvent('cwl_maden:kayalariver')
-AddEventHandler('cwl_maden:kayalariver', function()
+RegisterServerEvent('thd_maden:kayalariver')
+AddEventHandler('thd_maden:kayalariver', function()
 	local xPlayer = ESX.GetPlayerFromId(source)
 
 	local xItem = xPlayer.getInventoryItem("tas")
 
 	if xItem.count > 0 then
 		xPlayer.removeInventoryItem("tas", xItem.count)
-		TriggerClientEvent('cwl_maden:tokensayac', source, xItem.count * Config.KayaBasinaTokenMik)
+		TriggerClientEvent('thd_maden:tokensayac', source, xItem.count * Config.KayaBasinaTokenMik)
 		TriggerClientEvent('mythic_notify:SendAlert', "success", "Kayaları eritmeye bıraktın.", 3000)
-		TriggerClientEvent('cwl_maden:verchance', source, true)
+		TriggerClientEvent('thd_maden:verchance', source, true)
 	else
 		TriggerClientEvent('mythic_notify:SendAlert', "error", "Üstünde Taş yok.", 3000)
 	end
 end)
 
-RegisterServerEvent('cwl_maden:arac')
-AddEventHandler('cwl_maden:arac', function()
+RegisterServerEvent('thd_maden:arac')
+AddEventHandler('thd_maden:arac', function()
 	local _source = source
 	local xPlayer = ESX.GetPlayerFromId(_source)
 	
 	if Config.aracfiyat < xPlayer.getMoney() then
 		xPlayer.removeMoney(Config.aracfiyat)
-		TriggerClientEvent('cwl_maden:AracOlustur', _source)
+		TriggerClientEvent('thd_maden:AracOlustur', _source)
 	else
 		TriggerClientEvent('mythic_notify:SendAlert', "error", "Yeterli Paranız yok", 4000)
 	end
 end)
 
-RegisterServerEvent('cwl_maden:paraver')
-AddEventHandler('cwl_maden:paraver', function()
+RegisterServerEvent('thd_maden:paraver')
+AddEventHandler('thd_maden:paraver', function()
 	local _source = source
 	local xPlayer = ESX.GetPlayerFromId(_source)
 	
