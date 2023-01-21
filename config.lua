@@ -1,8 +1,8 @@
 Config = {}
 
 Config.Blips = {
-    {name = "Maden", id = 237, Location = vector3(2953.65, 2788.89, 41.54)},
-	{name = "Kaya Eritim & Satım", id = 237, Location = vector3(1080.22, -1982.46, 31.47)},
+    {name = "Mine", id = 237, Location = vector3(2953.65, 2788.89, 41.54)},
+	{name = "Rock Melting & Selling", id = 237, Location = vector3(1080.22, -1982.46, 31.47)},
 }
 
 Config.DrawDistance = 70.0
@@ -52,18 +52,18 @@ Config.Zones2 = {
 		Pos   = { x = 1080.15, y = -1982.4, z = 30.48 },
 		Size  = { x = 0.5, y = 0.5, z = 1.5 },
 		Type  = 25,
-		Message = "~INPUT_CONTEXT~ tuşuna basarak ~y~Tokenleri~s~ Al."
+		Message = "Press ~INPUT_CONTEXT~ to get ~y~Tokens~s~."
 	},
 	kayaver = {
 		Pos   = { x = 1115.38, y = -2003.96, z = 34.52 },
 		Size  = { x = 0.8, y = 0.8, z = 1.5 },
 		Type  = 25,
-		Message = "~INPUT_CONTEXT~ tuşuna basarak ~y~Kayaları~s~ ver."
+		Message = "Press ~INPUT_CONTEXT~ to give ~y~Rocks~s~."
 	},
 	tokensat = {
 		Pos   = { x = 1054.59, y = -1952.74, z = 31.12 },
 		Size  = { x = 1.0, y = 1.0, z = 1.5 },
 		Type  = 25,
-		Message = "~INPUT_CONTEXT~ tuşuna basarak ~y~Madenci~s~ Menüsünü aç."
+		Message = "Press ~INPUT_CONTEXT~ to open ~y~Miner~s~ Menu."
 	},
 }
