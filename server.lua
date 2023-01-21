@@ -2,7 +2,7 @@ ESX = nil
 
 TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
 
-ESX.RegisterUsableItem('kazma', function(source)
+ESX.RegisterUsableItem('pickaxe', function(source)
 	TriggerClientEvent('thd_maden:eleKazma', source)
 end)
 
@@ -11,9 +11,9 @@ RegisterServerEvent('thd_maden:givekaya')
 AddEventHandler('thd_maden:givekaya', function()
 	local xPlayer = ESX.GetPlayerFromId(source)
 
-	local xItem = xPlayer.getInventoryItem("tas")
+	local xItem = xPlayer.getInventoryItem("stone")
 
-	xPlayer.addInventoryItem("tas", 1)
+	xPlayer.addInventoryItem("stone", 1)
 end)
 
 RegisterServerEvent('thd_maden:giveToken')
@@ -37,10 +37,10 @@ RegisterServerEvent('thd_maden:kayalariver')
 AddEventHandler('thd_maden:kayalariver', function()
 	local xPlayer = ESX.GetPlayerFromId(source)
 
-	local xItem = xPlayer.getInventoryItem("tas")
+	local xItem = xPlayer.getInventoryItem("stone")
 
 	if xItem.count > 0 then
-		xPlayer.removeInventoryItem("tas", xItem.count)
+		xPlayer.removeInventoryItem("stone", xItem.count)
 		TriggerClientEvent('thd_maden:tokensayac', source, xItem.count * Config.KayaBasinaTokenMik)
 		TriggerClientEvent('mythic_notify:SendAlert', "success", "Kayaları eritmeye bıraktın.", 3000)
 		TriggerClientEvent('thd_maden:verchance', source, true)
