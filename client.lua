@@ -109,15 +109,15 @@ end)
 
 function OpenMenu()
 	local elements = {
-		{label = "Araç al", value = 'aracal'},
-        {label = "Token Sat", value = 'tokensat'},
-        {label = "Araç koy", value = 'arackoy'}
+		{label = "Rent a car", value = 'aracal'},
+        {label = "Sell token", value = 'tokensat'},
+        {label = "Deliver rental car", value = 'arackoy'}
 	}
 
 	ESX.UI.Menu.CloseAll()
 
-	ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'Madencilik', {
-		title    = "Madencilik",
+	ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'Miner', {
+		title    = "Miner",
 		align    = 'top-left',
 		elements = elements
 	}, function(data, menu)
@@ -160,7 +160,7 @@ function AracOlustur()
     if vehicle == nil then
         TriggerServerEvent('thd_maden:arac')
     else
-        exports['mythic_notify']:SendAlert('error', 'Zaten bir aracın var.', 5000)
+        ESX.ShowNotification('You already have a vehicle.', "error", 5000)
     end
 end
 
@@ -175,9 +175,9 @@ AddEventHandler('thd_maden:AracOlustur', function ()
         end
         vehicle = CreateVehicle(modelHash, Config.AracSpawnCords, 145.50, 1, 0)
         plate = GetVehicleNumberPlateText(vehicle)
-        exports['mythic_notify']:SendAlert('success', 'Araç kiralandı.', 5000)
+        ESX.ShowNotification('The car was rented.', "success", 5000)
     else
-        exports['mythic_notify']:SendAlert('error', 'Zaten bir aracın var.', 5000)
+        ESX.ShowNotification('You already have a vehicle.', "error", 5000)
     end
 end)
 
@@ -188,10 +188,10 @@ function AracSil()
             DeleteVehicle(vehicle)
             ESX.Game.DeleteVehicle(vehicle)
             vehicle = nil
-            exports['mythic_notify']:SendAlert('success', 'Araç teslim edildi.', 5000)
+            ESX.ShowNotification('Vehicle delivered.', "success", 5000)
             TriggerServerEvent('thd_maden:paraver')
         else
-            exports['mythic_notify']:SendAlert('inform', 'Araca binip tekrardan deneyin.', 5000)
+            ESX.ShowNotification('Get in the car and try again.', "info", 5000)
         end
     end
 end
@@ -224,7 +224,7 @@ AddEventHandler('thd_maden:vuramaz', function()
                 else
                     DisablePlayerFiring(PlayerPedId(), true)
                     FreezeEntityPosition(PlayerPedId(), false)
-                    exports['mythic_notify']:SendAlert('error', 'Yakında taş yok.', 5000)
+                    ESX.ShowNotification('There\'s no stone nearby', "error", 5000)
                 end
             end
         end
@@ -247,12 +247,11 @@ loadModel = function(model)
 end
 
 function TokenVerMenu()
-	ESX.UI.Menu.Open('dialog', GetCurrentResourceName(), 'Token Satma', {
-		title = "Satılacak Token Miktarı",
+	ESX.UI.Menu.Open('dialog', GetCurrentResourceName(), 'Sell Token', {
+		title = "Amount of Tokens to be Sold",
 	}, function (data2, menu)
 		local tokenMik = tonumber(data2.value)
 		if tokenMik < 0 or tokenMik == nil then
-			exports['mythic_notify']:SendAlert('error', 'Aynen şuan buga soktun.', 5000)
 		else
             TriggerServerEvent('thd_maden:givePara', tokenMik, tokenMik * Config.BirTokenFiyat)
 			menu.close()
@@ -278,10 +277,10 @@ function mesajGoster(msg, action)
                             anliktoken = 0
                             var = false
                         else
-                            exports['mythic_notify']:SendAlert('inform', "Tokenleri almak için " .. sayac .. " saniye beklemen lazım", 5000)
+			    ESX.ShowNotification('You have to wait ' .. sayac .. ' seconds to get the tokens', "info", 5000)
                         end
                     else
-                        exports['mythic_notify']:SendAlert('error', 'Eritilen taş yok.', 5000)
+                         ESX.ShowNotification('Not a stone has been melted yet', "error", 5000)
                     end
                 elseif action == "kayaver" then
                     ESX.Streaming.RequestAnimDict("amb@prop_human_bum_bin@idle_a", function()
@@ -318,7 +317,7 @@ AddEventHandler('thd_maden:tokensayac', function(itemsayi)
         sayac = sayac - 1
         Citizen.Wait(1000)
     end
-    exports['mythic_notify']:SendAlert('success', 'Tokenler alınmaya hazır.', 5000)
+    ESX.ShowNotification('Tokens are ready to be bought', "success", 5000)
     anliktoken = itemsayi + anliktoken
     alabilir = true
 end)
