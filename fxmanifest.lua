@@ -1,19 +1,25 @@
-fx_version "adamant"
+fx_version 'cerulean'
+game 'gta5'
 
-game "gta5"
+author 'thendra'
+description 'Mining script converted to QB-Core and optimized'
+version '2.0.0'
 
-author 'just thendra'
-
-client_script {
-    'client.lua',
+shared_scripts {
+    '@ox_lib/init.lua',
     'config.lua'
 }
 
-server_script {
-    'server.lua',
-    'config.lua'
+client_scripts {
+    'client.lua'
+}
+
+server_scripts {
+    'server.lua'
 }
 
 files {
     'index.html'
 }
+
+ui_page 'index.html'

@@ -1,391 +1,286 @@
-ESX				 = nil
-kontrol          = 2000
-kontrol2         = 2000
-kazma            = false
-local zone       = nil
-local sayac      = 60
+local QBCore = exports['qb-core']:GetCoreObject()
+local kazma = false
+local kazmaObj = nil
+local currentZone = nil
+local isMining = false
+local sayac = 60
 local anliktoken = 0
-local alabilir   = false
-local var        = false
-local vehicle    = nil
-sesler = { "rockhit1", "rockhit2", "rockhit3", "rockhit4"}
-
-Citizen.CreateThread(function()
-	while ESX == nil do
-		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-		Citizen.Wait(0)
-	end
-end)
+local alabilir = false
+local var = false
+local vehicle = nil
+local plate = nil
+local sesler = { "rockhit1", "rockhit2", "rockhit3", "rockhit4"}
 
 -- Create Blips
 Citizen.CreateThread(function()
     for k,v in pairs(Config.Blips) do
-        v.blip = AddBlipForCoord(v.Location, v.Location, v.Location)
-        SetBlipSprite(v.blip, v.id)
-        SetBlipAsShortRange(v.blip, true)
-	    BeginTextCommandSetBlipName("STRING")
-        SetBlipColour(v.blip, 0)
+        local blip = AddBlipForCoord(v.Location)
+        SetBlipSprite(blip, v.id)
+        SetBlipAsShortRange(blip, true)
+        SetBlipColour(blip, 0)
+        BeginTextCommandSetBlipName("STRING")
         AddTextComponentString(v.name)
-        EndTextCommandSetBlipName(v.blip)
+        EndTextCommandSetBlipName(blip)
     end
 end)
 
--- Display markers
-Citizen.CreateThread(function()
-	while true do
+-- Optimized Markers and Interaction using ox_lib Points
+for k, v in pairs(Config.Zones) do
+    local point = lib.points.new({
+        coords = vector3(v.Pos.x, v.Pos.y, v.Pos.z),
+        distance = 3.0,
+    })
 
-		Citizen.Wait(kontrol) -- bozulursa 0 yap
+    function point:onEnter()
+        currentZone = k
+    end
 
-		local coords = GetEntityCoords(PlayerPedId())
+    function point:onExit()
+        currentZone = nil
+    end
 
-		for k,v in pairs(Config.Zones) do
-			if(v.Type ~= -1 and GetDistanceBetweenCoords(coords, v.Pos.x, v.Pos.y, v.Pos.z, true) < Config.DrawDistance) then
-                kontrol = 0
-				DrawMarker(v.Type, v.Pos.x, v.Pos.y, v.Pos.z, 0.0, 0.0, 0.0, 0, 180.0, 0.0, v.Size.x, v.Size.y, v.Size.z, Config.MarkerColor.r, Config.MarkerColor.g, Config.MarkerColor.b, 100, false, true, 2, false, false, false, false)
-            else
-                kontrol = 1000
-            end
-		end
-	end
-end)
-
-Citizen.CreateThread(function()
-	while true do
-
-		Citizen.Wait(kontrol2) -- bozulursa 0 yap
-
-		local coords = GetEntityCoords(PlayerPedId())
-
-		for k,v in pairs(Config.Zones2) do
-			if(v.Type ~= -1 and GetDistanceBetweenCoords(coords, v.Pos.x, v.Pos.y, v.Pos.z, true) < 85.0) then
-                kontrol2 = 0
-				DrawMarker(v.Type, v.Pos.x, v.Pos.y, v.Pos.z, 0.0, 0.0, 0.0, 0, 180.0, 0.0, v.Size.x, v.Size.y, v.Size.z, Config.MarkerColor.r, Config.MarkerColor.g, Config.MarkerColor.b, 100, false, true, 2, false, false, false, false)
-            else
-                kontrol2 = 2000
-            end
-		end
-	end
-end)
-
--- Enter / Exit marker events
-Citizen.CreateThread(function()
-	while true do
-
-		Citizen.Wait(kontrol)
-
-		local coords      = GetEntityCoords(PlayerPedId())
-		local isInMarker  = false
-		local currentZone = nil
-
-		for k,v in pairs(Config.Zones) do
-			if GetDistanceBetweenCoords(coords, v.Pos.x, v.Pos.y, v.Pos.z, true) < 3.0 then
-                kontrol = 0
-				isInMarker  = true
-				currentZone = k
-			end
-		end
-
-        for k,v in pairs(Config.Zones2) do
-			if GetDistanceBetweenCoords(coords, v.Pos.x, v.Pos.y, v.Pos.z, true) < 1.5 then
-                kontrol2 = 0
-				isInMarker  = true
-				currentZone = k
-			end
-		end
-
-		if (isInMarker and not HasAlreadyEnteredMarker) or (isInMarker and LastZone ~= currentZone) then
-			HasAlreadyEnteredMarker = true
-			LastZone                = currentZone
-			TriggerEvent('thd_maden:hasEnteredMarker', currentZone)
-		end
-
-		if not isInMarker and HasAlreadyEnteredMarker then
-			HasAlreadyEnteredMarker = false
-			TriggerEvent('thd_maden:hasExitedMarker', LastZone)
-		end
+    function point:nearby()
+        DrawMarker(v.Type, self.coords.x, self.coords.y, self.coords.z, 0.0, 0.0, 0.0, 0, 180.0, 0.0, v.Size.x, v.Size.y, v.Size.z, Config.MarkerColor.r, Config.MarkerColor.g, Config.MarkerColor.b, 100, false, true, 2, false, false, false, false)
         
-	end
-end)
-
-function OpenMenu()
-	local elements = {
-		{label = "Rent a car", value = 'aracal'},
-        {label = "Sell token", value = 'tokensat'},
-        {label = "Deliver rental car", value = 'arackoy'}
-	}
-
-	ESX.UI.Menu.CloseAll()
-
-	ESX.UI.Menu.Open('default', GetCurrentResourceName(), 'Miner', {
-		title    = "Miner",
-		align    = 'top-left',
-		elements = elements
-	}, function(data, menu)
-		if data.current.value == 'tokensat' then
-			TokenVerMenu()
-		elseif data.current.value == 'aracal' then
-            AracOlustur()
-        elseif data.current.value == 'arackoy' then
-            AracSil()
-		end
-	end, function(data, menu)
-		menu.close()
-	end)
+        if kazma and not isMining and IsDisabledControlJustPressed(0, 346) then -- LMB with weapon disabled
+            MiningAction()
+        end
+    end
 end
 
-RegisterNetEvent('thd_maden:eleKazma')
-AddEventHandler('thd_maden:eleKazma', function()
-    eleKazma()
-end)
+for k, v in pairs(Config.Zones2) do
+    local point = lib.points.new({
+        coords = vector3(v.Pos.x, v.Pos.y, v.Pos.z),
+        distance = 1.5,
+    })
 
-function eleKazma()
-    if kazma == false then
-        kazma = CreateObject(GetHashKey("prop_tool_pickaxe"), 0, 0, 0, true, true, true) 
-        AttachEntityToEntity(kazma, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 57005), 0.09, 0.03, -0.02, -78.0, 13.0, 28.0, false, false, false, false, 1, true)
-        SetCurrentPedWeapon(PlayerPedId(), GetHashKey('WEAPON_UNARMED'))
-        TriggerEvent('thd_maden:vuramaz')
-        TriggerEvent('thd_maden:vuramaz2')
-        kazma = true
-    else
-        DetachEntity(kazma, 1, true)
-        DeleteObject(kazma)
-        SetCurrentPedWeapon(PlayerPedId(), GetHashKey('WEAPON_UNARMED'))
-        TriggerEvent('thd_maden:vuramaz')
-        TriggerEvent('thd_maden:vuramaz2')
-		kazma = false
+    function point:onEnter()
+        lib.showTextUI(v.Message)
     end
+
+    function point:onExit()
+        lib.hideTextUI()
+    end
+
+    function point:nearby()
+        DrawMarker(v.Type, self.coords.x, self.coords.y, self.coords.z, 0.0, 0.0, 0.0, 0, 180.0, 0.0, v.Size.x, v.Size.y, v.Size.z, Config.MarkerColor.r, Config.MarkerColor.g, Config.MarkerColor.b, 100, false, true, 2, false, false, false, false)
+        
+        if IsControlJustPressed(0, 38) then
+            if k == "tokenal" then
+                GetTokens()
+            elseif k == "kayaver" then
+                GiveRocks()
+            elseif k == "tokensat" then
+                OpenMinerMenu()
+            elseif k == "aracteslim" then
+                AracSil()
+            end
+        end
+    end
+end
+
+function MiningAction()
+    if not currentZone or isMining then return end
+    isMining = true
+    
+    FreezeEntityPosition(PlayerPedId(), true)
+    lib.requestAnimDict("melee@large_wpn@streamed_core")
+    
+    -- Play animation on a loop
+    TaskPlayAnim(PlayerPedId(), "melee@large_wpn@streamed_core", "ground_attack_on_spot", 1.0, -1.0, -1, 1, 1, false, false, false)
+    TriggerServerEvent('InteractSound_SV:PlayOnSource', sesler[math.random(#sesler)], 0.3)
+    
+    SendNUIMessage({
+        action = "startMinigame"
+    })
+    
+    Citizen.CreateThread(function()
+        while isMining do
+            Citizen.Wait(0)
+            if IsControlJustPressed(0, 38) then -- E key
+                SendNUIMessage({ action = "hit" })
+                TriggerServerEvent('InteractSound_SV:PlayOnSource', sesler[math.random(#sesler)], 0.3)
+                
+                -- Play animation swing to give visual feedback
+                TaskPlayAnim(PlayerPedId(), "melee@large_wpn@streamed_core", "ground_attack_on_spot", 1.0, -1.0, -1, 1, 1, false, false, false)
+            end
+            
+            -- Press BACKSPACE or ESC to cancel
+            if IsControlJustPressed(0, 177) or IsControlJustPressed(0, 200) then
+                SendNUIMessage({ action = "stopMinigame" })
+            end
+        end
+    end)
+end
+
+function GetTokens()
+    if var then
+        if alabilir then
+            alabilir = false
+            TriggerServerEvent('thd_maden:giveToken', anliktoken)
+            anliktoken = 0
+            var = false
+            QBCore.Functions.Notify('Tokenlar alındı.', 'success')
+        else
+            QBCore.Functions.Notify('Tokenların hazır olması için ' .. sayac .. ' saniye beklemelisin.', 'info')
+        end
+    else
+        QBCore.Functions.Notify('Henüz eritilen taş yok.', 'error')
+    end
+end
+
+function GiveRocks()
+    lib.requestAnimDict("amb@prop_human_bum_bin@idle_a")
+    TaskPlayAnim(PlayerPedId(), "amb@prop_human_bum_bin@idle_a", "idle_a", 1.0, -1.0, 5000, 0, 1, true, true, true)
+    
+    if lib.progressBar({
+        duration = 5000,
+        label = 'Kayalar veriliyor...',
+        useWhileDead = false,
+        canCancel = true,
+        disable = {
+            car = true,
+            move = true,
+        },
+    }) then
+        TriggerServerEvent('thd_maden:kayalariver')
+    else
+        ClearPedTasks(PlayerPedId())
+    end
+end
+
+function OpenMinerMenu()
+    lib.registerContext({
+        id = 'miner_menu',
+        title = 'Madenci Menüsü',
+        options = {
+            {
+                title = 'Araç Kirala',
+                description = '500$ karşılığında araç kirala',
+                icon = 'car',
+                onSelect = function()
+                    AracOlustur()
+                end,
+            },
+            {
+                title = 'Token Sat',
+                description = 'Topladığın tokenları sat',
+                icon = 'coins',
+                onSelect = function()
+                    TokenVerMenu()
+                end,
+            },
+            {
+                title = 'Aracı Teslim Et',
+                description = 'Kiralık aracı geri ver',
+                icon = 'truck-ramp-box',
+                onSelect = function()
+                    AracSil()
+                end,
+            },
+        }
+    })
+    lib.showContext('miner_menu')
+end
+
+function TokenVerMenu()
+    local input = lib.inputDialog('Token Satış', {
+        {type = 'number', label = 'Satılacak Token Miktarı', description = 'Kaç adet satmak istiyorsun?', min = 1},
+    })
+ 
+    if not input then return end
+    local tokenMik = input[1]
+    
+    TriggerServerEvent('thd_maden:givePara', tokenMik, tokenMik * Config.BirTokenFiyat)
 end
 
 function AracOlustur()
     if vehicle == nil then
         TriggerServerEvent('thd_maden:arac')
     else
-        ESX.ShowNotification('You already have a vehicle.', "error", 5000)
+        QBCore.Functions.Notify('Zaten bir aracın var.', 'error')
     end
 end
 
-RegisterNetEvent('thd_maden:AracOlustur')
-AddEventHandler('thd_maden:AracOlustur', function ()
-    if vehicle == nil then
-        local modelHash = GetHashKey("Rebel")
-        RequestModel(modelHash)
-        local isLoaded = HasModelLoaded(modelHash)
-        while isLoaded == false do
-            Citizen.Wait(100)
-        end
-        vehicle = CreateVehicle(modelHash, Config.AracSpawnCords, 145.50, 1, 0)
-        plate = GetVehicleNumberPlateText(vehicle)
-        ESX.ShowNotification('The car was rented.', "success", 5000)
-    else
-        ESX.ShowNotification('You already have a vehicle.', "error", 5000)
-    end
+RegisterNetEvent('thd_maden:AracOlustur', function()
+    local model = `rebel`
+    lib.requestModel(model)
+    vehicle = CreateVehicle(model, Config.AracSpawnCords.x, Config.AracSpawnCords.y, Config.AracSpawnCords.z, 145.50, true, false)
+    plate = GetVehicleNumberPlateText(vehicle)
+    TaskWarpPedIntoVehicle(PlayerPedId(), vehicle, -1)
+    exports['LegacyFuel']:SetFuel(vehicle, 100.0) 
+    
+    TriggerServerEvent('thd_maden:server:GiveKey', plate)
+    QBCore.Functions.Notify('Araç kiralandı ve anahtarı verildi.', 'success')
 end)
 
 function AracSil()
     if vehicle ~= nil then
-        if plate == GetVehicleNumberPlateText(GetVehiclePedIsIn(PlayerPedId(), true)) then
-            DeleteEntity(vehicle)
-            DeleteVehicle(vehicle)
-            ESX.Game.DeleteVehicle(vehicle)
+        local currVeh = GetVehiclePedIsIn(PlayerPedId(), false)
+        if currVeh == vehicle then
+            local tempPlate = plate -- Store plate before clearing
+            QBCore.Functions.DeleteVehicle(vehicle)
             vehicle = nil
-            ESX.ShowNotification('Vehicle delivered.', "success", 5000)
-            TriggerServerEvent('thd_maden:paraver')
+            plate = nil
+            TriggerServerEvent('thd_maden:paraver', tempPlate)
+            QBCore.Functions.Notify('Araç teslim edildi, depozito iade edildi.', 'success')
         else
-            ESX.ShowNotification('Get in the car and try again.', "info", 5000)
+            QBCore.Functions.Notify('Kiralanan aracın içinde olmalısın.', 'error')
         end
     end
 end
 
-RegisterNetEvent('thd_maden:vuramaz')
-AddEventHandler('thd_maden:vuramaz', function()
-    Citizen.CreateThread(function()
-        while kazma do
-            Citizen.Wait(0)
-            DisablePlayerFiring(PlayerPedId(), true)
-            if IsControlJustPressed(1,  346) then
-                FreezeEntityPosition(PlayerPedId(), true)
-                if currentBar ~= nil then
-                    ESX.Streaming.RequestAnimDict("melee@large_wpn@streamed_core", function()
-                        TaskPlayAnim(PlayerPedId(), "melee@large_wpn@streamed_core", "ground_attack_on_spot", 1.0, -1.0, 1000, 49, 1, false, false, false)
-                        EnableControlAction(0, 32, true) -- w
-                        EnableControlAction(0, 34, true) -- a
-                        EnableControlAction(0, 8, true) -- s
-                        EnableControlAction(0, 9, true) -- d
-                        EnableControlAction(0, 22, true) -- space
-                        EnableControlAction(0, 36, true) -- ctrl
-                        EnableControlAction(0, 21, true) -- SHIFT
-                        TriggerEvent('InteractSound_CL:PlayOnOne', sesler[ math.random( #sesler ) ], 0.3)
-                        Citizen.Wait(1500)
-                        DisablePlayerFiring(PlayerPedId(), true)
-                        FreezeEntityPosition(PlayerPedId(), false)
-                        DisablePlayerFiring(PlayerPedId(), true)
-                        BarEkle()
-                    end)
-                else
-                    DisablePlayerFiring(PlayerPedId(), true)
-                    FreezeEntityPosition(PlayerPedId(), false)
-                    ESX.ShowNotification('There\'s no stone nearby', "error", 5000)
-                end
+RegisterNetEvent('thd_maden:eleKazma', function()
+    if not kazma then
+        kazmaObj = CreateObject(`prop_tool_pickaxe`, 0, 0, 0, true, true, true)
+        AttachEntityToEntity(kazmaObj, PlayerPedId(), GetPedBoneIndex(PlayerPedId(), 57005), 0.09, 0.03, -0.02, -78.0, 13.0, 28.0, false, false, false, false, 1, true)
+        kazma = true
+        QBCore.Functions.Notify('Kazma kuşanıldı. [LMB] ile kazabilirsin.', 'primary')
+        
+        -- Loop to disable firing while pickaxe is out
+        Citizen.CreateThread(function()
+            while kazma do
+                DisablePlayerFiring(PlayerId(), true)
+                Citizen.Wait(0)
             end
+        end)
+    else
+        if kazmaObj then
+            DeleteEntity(kazmaObj)
+            kazmaObj = nil
         end
-    end)
+        kazma = false
+        QBCore.Functions.Notify('Kazma kaldırıldı.', 'primary')
+    end
 end)
 
-RegisterNetEvent('thd_maden:vuramaz2')
-AddEventHandler('thd_maden:vuramaz2', function()
-    Citizen.CreateThread(function()
-        while kazma do
-            Citizen.Wait(0)
-            DisablePlayerFiring(PlayerPedId(), true)
-        end
-    end)
-end)
-
-loadModel = function(model)
-    while not HasModelLoaded(model) do Wait(0) RequestModel(model) end
-    return model
-end
-
-function TokenVerMenu()
-	ESX.UI.Menu.Open('dialog', GetCurrentResourceName(), 'Sell Token', {
-		title = "Amount of Tokens to be Sold",
-	}, function (data2, menu)
-		local tokenMik = tonumber(data2.value)
-		if tokenMik < 0 or tokenMik == nil then
-		else
-            TriggerServerEvent('thd_maden:givePara', tokenMik, tokenMik * Config.BirTokenFiyat)
-			menu.close()
-		end
-	end, function (data2, menu)
-		menu.close()
-	end)
-end
-
-function mesajGoster(msg, action)
-    Citizen.CreateThread(function()
-        while currentBar ~= nil do
-            Citizen.Wait(0)
-            SetTextComponentFormat('STRING')
-			AddTextComponentString(msg)
-			DisplayHelpTextFromStringLabel(0, 0, 1, -1)
-            if IsControlJustPressed(1,  38) then
-                if action == "tokenal" then
-                    if var == true then
-                        if alabilir == true then
-                            alabilir = false
-                            TriggerServerEvent('thd_maden:giveToken', anliktoken)
-                            anliktoken = 0
-                            var = false
-                        else
-			    ESX.ShowNotification('You have to wait ' .. sayac .. ' seconds to get the tokens', "info", 5000)
-                        end
-                    else
-                         ESX.ShowNotification('Not a stone has been melted yet', "error", 5000)
-                    end
-                elseif action == "kayaver" then
-                    ESX.Streaming.RequestAnimDict("amb@prop_human_bum_bin@idle_a", function()
-                        TaskPlayAnim(PlayerPedId(), "amb@prop_human_bum_bin@idle_a", "idle_a", 1.0, -1.0, 5000, 0, 1, true, true, true)
-                        EnableControlAction(0, 32, true) -- w
-                        EnableControlAction(0, 34, true) -- a
-                        EnableControlAction(0, 8, true) -- s
-                        EnableControlAction(0, 9, true) -- d
-                        EnableControlAction(0, 22, true) -- space
-                        EnableControlAction(0, 36, true) -- ctrl
-                        Citizen.Wait(5000)
-                        DisablePlayerFiring(PlayerPedId(), true)
-                        FreezeEntityPosition(PlayerPedId(), false)
-                        DisablePlayerFiring(PlayerPedId(), true)
-                    end)
-                    TriggerServerEvent('thd_maden:kayalariver')
-                elseif action == "tokensat" then
-                    OpenMenu()
-                end
-            end
-        end
-    end)
-end
-
-RegisterNetEvent('thd_maden:verchance')
-AddEventHandler('thd_maden:verchance', function(bool)
+RegisterNetEvent('thd_maden:verchance', function(bool)
     var = bool
 end)
 
-RegisterNetEvent('thd_maden:tokensayac')
-AddEventHandler('thd_maden:tokensayac', function(itemsayi)
+RegisterNetEvent('thd_maden:tokensayac', function(itemsayi)
     sayac = Config.KayaEritmeSuresi
-    while sayac > 0 do
-        sayac = sayac - 1
-        Citizen.Wait(1000)
-    end
-    ESX.ShowNotification('Tokens are ready to be bought', "success", 5000)
-    anliktoken = itemsayi + anliktoken
-    alabilir = true
+    Citizen.CreateThread(function()
+        while sayac > 0 do
+            sayac = sayac - 1
+            Citizen.Wait(1000)
+        end
+        QBCore.Functions.Notify('Tokenlar alınmaya hazır!', 'success')
+        anliktoken = itemsayi + anliktoken
+        alabilir = true
+    end)
 end)
 
-AddEventHandler('thd_maden:hasEnteredMarker', function(zone)
-    currentBar = zone
-    if (zone ~= "tokenal" and zone ~= "kayaver" and zone ~= "tokensat") then
-        SetDisplay(zone, "block")
-        kontrol = 0
-    else
-        for k,v in pairs(Config.Zones2) do
-            if zone == k then
-                mesajGoster(v.Message, k)
-            end
-		end
-        kontrol2 = 0
-    end
-end)
-
-AddEventHandler('thd_maden:hasExitedMarker', function(zone)
-    closeAll()
-    currentBar = nil
-end)
-
-RegisterNUICallback("kaya", function(data)
-    if data.kaya then
+RegisterNUICallback("minigameResult", function(data, cb)
+    isMining = false
+    ClearPedTasks(PlayerPedId())
+    FreezeEntityPosition(PlayerPedId(), false)
+    
+    if data.success then
         TriggerServerEvent('thd_maden:givekaya')
+        QBCore.Functions.Notify('Başarıyla kazdın!', 'success')
+    else
+        QBCore.Functions.Notify('Kazma işlemi başarısız oldu.', 'error')
     end
+    cb('ok')
 end)
-
-function SetDisplay(bar, bool)
-    --SetNuiFocus(bool, bool)
-    SendNUIMessage({
-        type = bar,
-        status = bool,
-    })
-end
-
-function BarEkle(zonee) 
-    SendNUIMessage({
-        type = "ekle",
-        bar = currentBar,
-    })
-end
-
-function closeAll()
-    SendNUIMessage({
-        type = "bar1",
-        status = "none",
-    })
-    SendNUIMessage({
-        type = "bar2",
-        status = "none",
-    })
-    SendNUIMessage({
-        type = "bar3",
-        status = "none",
-    })
-    SendNUIMessage({
-        type = "bar4",
-        status = "none",
-    })
-    SendNUIMessage({
-        type = "bar5",
-        status = "none",
-    })
-    SendNUIMessage({
-        type = "bar6",
-        status = "none",
-    })
-end

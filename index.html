@@ -1,93 +1,266 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>thd_maden</title>
-        <meta charset="utf-8">
-        <link rel="preconnect" href="https://fonts.gstatic.com">
-        <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro&display=swap" rel="stylesheet">
+<head>
+    <title>AstraV Mining Minigame</title>
+    <meta charset="utf-8">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="nui://game/ui/jquery.js" type="text/javascript"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Montserrat', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 15%;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        .minigame-container {
+            background: rgba(15, 15, 15, 0.95);
+            border: 2px solid rgba(0, 255, 157, 0.2);
+            border-radius: 16px;
+            padding: 20px 30px;
+            width: 400px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 157, 0.1);
+            display: none; /* Hidden by default */
+        }
+
+        .title {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 5px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .subtitle {
+            color: #a1a1aa;
+            font-size: 12px;
+            margin-bottom: 20px;
+        }
+
+        .track {
+            width: 100%;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .target-zone {
+            position: absolute;
+            height: 100%;
+            background: rgba(0, 255, 157, 0.4);
+            border-left: 2px solid #00FF9D;
+            border-right: 2px solid #00FF9D;
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+            top: 0;
+        }
+
+        .cursor {
+            position: absolute;
+            height: 120%;
+            width: 4px;
+            background: #ffffff;
+            top: -10%;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+            transform: translateX(-50%);
+        }
+
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: #00FF9D;
+            border-color: #00FF9D;
+            box-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+        }
         
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        <script src="nui://game/ui/jquery.js" type="text/javascript"></script>
+        .dot.fail {
+            background: #ef4444;
+            border-color: #ef4444;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="minigame-container" id="minigame">
+        <div class="title">TAŞ KAZILIYOR</div>
+        <div class="subtitle">[E] tuşuna basarak yeşil alanda durdur</div>
         
-        <style>
+        <div class="track" id="track">
+            <div class="target-zone" id="targetZone"></div>
+            <div class="cursor" id="cursor"></div>
+        </div>
 
-            * {
-                padding: 0;
-                margin: 0;
-            }
+        <div class="progress-dots" id="dots">
+            <div class="dot" id="dot-1"></div>
+            <div class="dot" id="dot-2"></div>
+            <div class="dot" id="dot-3"></div>
+        </div>
+    </div>
 
-            body {
-                display: flex;
-                height: 100vh;
-                width: 100%;
-                justify-content: center;
-                z-index: 3;
-            }
+    <script>
+        let isPlaying = false;
+        let cursorPosition = 0;
+        let cursorDirection = 1; // 1 for right, -1 for left
+        let cursorSpeed = 1.2;
+        let animationFrame;
+        
+        let targetStart = 0;
+        let targetWidth = 20; // percentage
+        
+        let successes = 0;
+        const maxSuccesses = 3;
 
-            .ilerleme {
-                position: fixed;
-                bottom: 10%;
-                width: 14%;
-                border: 0 none;
-                background: #ddd;
-                border-radius: 14px;
-                height: 1.2%;
-            }
-
-            .ilerleme::-moz-progress-bar {
-                background: #FFF;
-                border-radius: 14px;
-            }
-
-            .ilerleme::-webkit-progress-bar {
-                background: transparent;
-            }
-
-            .ilerleme::-webkit-progress-value {
-                background: rgb(246,10,10);
-                background: linear-gradient(59deg, rgba(246,10,10,1) 0%, rgba(186,9,9,1) 100%);
-                border-radius: 14px;
-                box-shadow: inset 0 -2px 4px rgba(0, 0, 0, 0.2), 0 2px 5px 0px rgba(0, 0, 0, 0.1);
-            }
-
-        </style>
-    </head>
-    <body>
-        <progress class="ilerleme" id="bar1" value="0" max="10" style="display: none;"></progress>
-        <progress class="ilerleme" id="bar2" value="0" max="10" style="display: none;"></progress>
-        <progress class="ilerleme" id="bar3" value="0" max="10" style="display: none;"></progress>
-        <progress class="ilerleme" id="bar4" value="0" max="10" style="display: none;"></progress>
-        <progress class="ilerleme" id="bar5" value="0" max="10" style="display: none;"></progress>
-        <progress class="ilerleme" id="bar6" value="0" max="10" style="display: none;"></progress>
-
-        <script>
-            $(document).ready(function(){
-
-                window.addEventListener('message', function(event) {
-                    var item = event.data;
-                    $("#" + item.type).css("display", item.status)
-                    if(item.type === "ekle" && item.bar != null) {
-                        $.post('http://thd_maden/kaya', JSON.stringify({
-                            kaya: barekle(item.bar, 1.5),
-                        }));
-                    }
-                })
-
-                function barekle(barId, value) {
-                    var bar = $("#" + barId)
-                    barVal = bar.val()
-                    barNextVal = barVal + value
-                    if(barNextVal >= 10){
-                        bar.val(0)
-                        return true
-                    }
-                    else {
-                        bar.val(barNextVal)
-                        return false
-                    }
+        $(document).ready(function(){
+            window.addEventListener('message', function(event) {
+                let data = event.data;
+                
+                if (data.action === "startMinigame") {
+                    startMinigame();
+                } else if (data.action === "hit") {
+                    handleHit();
+                } else if (data.action === "stopMinigame") {
+                    stopMinigame(false);
                 }
-
             });
-        </script>
-    </body>
+        });
+
+        function startMinigame() {
+            if (isPlaying) return;
+            
+            $("#minigame").fadeIn(200);
+            successes = 0;
+            cursorSpeed = 1.2;
+            updateDots();
+            randomizeTarget();
+            
+            cursorPosition = 0;
+            cursorDirection = 1;
+            isPlaying = true;
+            
+            lastTime = performance.now();
+            animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        function stopMinigame(success) {
+            isPlaying = false;
+            cancelAnimationFrame(animationFrame);
+            $("#minigame").fadeOut(200);
+            
+            $.post('https://thd_maden/minigameResult', JSON.stringify({
+                success: success
+            }));
+        }
+
+        function randomizeTarget() {
+            // Randomize width between 15% and 25%
+            targetWidth = Math.floor(Math.random() * 10) + 15;
+            
+            // Randomize start position ensuring it stays within bounds (0 to 100-targetWidth)
+            targetStart = Math.floor(Math.random() * (100 - targetWidth));
+            
+            $("#targetZone").css({
+                "left": targetStart + "%",
+                "width": targetWidth + "%"
+            });
+        }
+
+        let lastTime = 0;
+        function gameLoop(time) {
+            if (!isPlaying) return;
+            
+            let deltaTime = time - lastTime;
+            lastTime = time;
+            
+            // Speed adjustment based on framerate to ensure smooth movement
+            let moveAmount = cursorSpeed * (deltaTime / 16); 
+            
+            cursorPosition += cursorDirection * moveAmount;
+
+            if (cursorPosition >= 100) {
+                cursorPosition = 100;
+                cursorDirection = -1;
+            } else if (cursorPosition <= 0) {
+                cursorPosition = 0;
+                cursorDirection = 1;
+            }
+
+            $("#cursor").css("left", cursorPosition + "%");
+
+            animationFrame = requestAnimationFrame(gameLoop);
+        }
+
+        function handleHit() {
+            if (!isPlaying) return;
+
+            let inZone = (cursorPosition >= targetStart && cursorPosition <= (targetStart + targetWidth));
+
+            if (inZone) {
+                // Success
+                successes++;
+                cursorSpeed += 0.3; // Increase difficulty
+                updateDots();
+                
+                if (successes >= maxSuccesses) {
+                    // Win! Give slight delay so they see the final dot
+                    isPlaying = false;
+                    setTimeout(() => {
+                        stopMinigame(true);
+                    }, 500);
+                } else {
+                    randomizeTarget();
+                }
+            } else {
+                // Fail
+                $("#dot-" + (successes + 1)).addClass("fail");
+                isPlaying = false;
+                
+                setTimeout(() => {
+                    stopMinigame(false);
+                }, 800);
+            }
+        }
+
+        function updateDots() {
+            $(".dot").removeClass("active fail");
+            for (let i = 1; i <= maxSuccesses; i++) {
+                if (i <= successes) {
+                    $("#dot-" + i).addClass("active");
+                }
+            }
+        }
+    </script>
+</body>
 </html>
